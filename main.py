@@ -21,13 +21,21 @@ class Boulangerie:
     }
 
         self.produits = {
-            'pain_frais': 0,
-            'pain_sec': 0,
-            'croissant': 0,
-            'pain_au_chocolat': 0,
-            'brioche': 0,
-            'pain_aux_raisins': 0
-        }
+        'frais': {
+        'pain': 0,
+        'croissant': 0,
+        'pain_au_chocolat': 0,
+        'brioche': 0,
+        'pain_aux_raisins': 0
+    },
+    'sec': {
+        'pain': 0,
+        'croissant': 0,
+        'pain_au_chocolat': 0,
+        'brioche': 0,
+        'pain_aux_raisins': 0
+    }
+}
         self.recettes = {
             'pain_frais': {'farine': 10, 'levure': 2, 'sel': 1, 'eau': 5},
             'croissant': {'farine': 12, 'beurre': 5, 'levure': 2},
@@ -53,7 +61,7 @@ class Boulangerie:
         if all(self.inventaire.get(ing, 0) >= qte for ing, qte in recette.items()):
             for ing, qte in recette.items():
                 self.inventaire[ing] -= qte
-            self.produits[nom_produit] += 2
+            self.produits['frais'][nom_produit] += 2
             print(f"✅ 2 {nom_produit.replace('_', ' ').title()} fabriqués avec succès!")
         else:
             print(f"❌ Pas assez d'ingrédients pour {nom_produit.replace('_', ' ')}.")
@@ -74,27 +82,35 @@ class Boulangerie:
         else:
             print("❌ Pas assez d'ingrédients!")
 
-    def vendre(self):
-        ventes = 0
-        produits_ordres = sorted(self.prix_vente.items(), key=lambda x: x[1][1], reverse=True)
+def vendre(self):
+    ventes = 0
+    produits_ordres = sorted(self.prix_vente.items(), key=lambda x: x[1][1], reverse=True)
 
-        while ventes < 2:
-            produit_vendu = False
-            for produit, (prix_min, prix_max) in produits_ordres:
-                if self.produits.get(produit, 0) > 0:
-                    prix = random.randint(prix_min, prix_max)
-                    self.argent += prix
-                    self.produits[produit] -= 1
-                    nom_affiche = produit.replace("_", " ").title()
-                    print(f"💰 {nom_affiche} vendu pour {prix}€!")
-                    ventes += 1
-                    produit_vendu = True
-                    break  # Vendre un seul à la fois pour mieux répartir
-            if not produit_vendu:
-                if ventes == 0:
-                    print("❌ Aucun produit à vendre.")
-                return
-            
+    while ventes < 2:
+        produit_vendu = False
+        for produit, (prix_min, prix_max) in produits_ordres:
+            # Vendre frais en priorité
+            if self.produits['frais'].get(produit, 0) > 0:
+                prix = random.randint(prix_min, prix_max)
+                self.argent += prix
+                self.produits['frais'][produit] -= 1
+                print(f"💰 {produit.replace('_',' ').title()} (frais) vendu pour {prix}€!")
+                ventes += 1
+                produit_vendu = True
+                break
+            # Sinon vendre sec à 1€
+            elif self.produits['sec'].get(produit, 0) > 0:
+                self.argent += 1
+                self.produits['sec'][produit] -= 1
+                print(f"💰 {produit.replace('_',' ').title()} (sec) vendu pour 1€!")
+                ventes += 1
+                produit_vendu = True
+                break
+        if not produit_vendu:
+            if ventes == 0:
+                print("❌ Aucun produit à vendre.")
+            return
+                    
     def acheter_ingredients(self):
         cout = 20
         if self.argent >= cout:
@@ -113,12 +129,16 @@ class Boulangerie:
         print(f"🎯 Actions restantes aujourd'hui: {self.actions_restantes}")
         print(f"💶 Argent: {self.argent}€")
         print("\n📝 Inventaire:")
-        for item, qte in self.inventaire.items():
-            print(f"- {item}: {qte}")
-        print("\n🥖 Produits:")
-        for prod, qte in self.produits.items():
-            print(f"- {prod}: {qte}")
-        print("=======================\n")
+        print("🥐 Produits frais :")
+        for nom, qte in self.produits['frais'].items():
+            if qte > 0:
+                print(f"- {nom.replace('_', ' ').title()} : {qte}")
+
+        print("🥖 Produits secs :")
+        for nom, qte in self.produits['sec'].items():
+            if qte > 0:
+                print(f"- {nom.replace('_', ' ').title()} : {qte}")
+                print("=======================\n")
 
 def main():
     print("🥖 Bienvenue dans votre Boulangerie! 🥖")
@@ -207,8 +227,13 @@ def main():
             time.sleep(1)
         
         # Fin de journée : les pains frais deviennent secs
-        boulangerie.produits['pain_sec'] = boulangerie.produits['pain_frais']
-        boulangerie.produits['pain_frais'] = 0
+        # Fin de journée : tous les produits frais deviennent secs
+        for nom in boulangerie.produits['frais']:
+            quantite = boulangerie.produits['frais'][nom]
+            boulangerie.produits['sec'][nom] += quantite
+            boulangerie.produits['frais'][nom] = 0
+        # Réinitialiser les actions restantes
+        boulangerie.actions_restantes = 5   
         boulangerie.jour += 1
         boulangerie.actions_restantes = 5
         if boulangerie.jour <= 7:
