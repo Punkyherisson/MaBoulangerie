@@ -1,21 +1,25 @@
-# 🥖 Ma Boulangerie – Jeu de gestion Python
 
-**Ma Boulangerie** est un petit jeu textuel de gestion développé en Python.  
-Vous incarnez un artisan boulanger et devez fabriquer, vendre, et gérer vos stocks pour prospérer en 7 jours.
+# 🥖 Ma Boulangerie
 
----
+Un mini-jeu de gestion de boulangerie en ligne de commande.
 
-## 🎮 Fonctionnalités
+## 🎯 Objectif
+Faire prospérer votre boulangerie en 7 jours !
 
-- ⏳ Système de jours et d’actions limitées (5/jour)
-- 🥐 Recettes variées : pain, croissants, pains au chocolat, brioches, pains aux raisins
-- 📦 Gestion des stocks d’ingrédients
-- 💰 Système de vente avec prix aléatoire et priorisation des produits frais
-- 🧠 Interface textuelle simple et intuitive
-- 🔄 Transformation automatique des pains frais en pains secs en fin de journée
+## ⚙️ Règles
+- 4 actions par jour
+- Vous pouvez fabriquer jusqu'à 100 pains ou viennoiseries par jour
+- Chaque pain coûte 1€, chaque viennoiserie coûte 2€ à fabriquer
+- Vous gagnez :
+  - 4€ par pain frais
+  - 5€ par viennoiserie fraîche
+  - 1€ pour tout produit sec (après 1 jour)
+- Objectif : gagner le plus d’argent possible
 
----
-
-## ▶️ Lancer le jeu
-
+## ▶️ Lancement
+```bash
 python main.py
+```
+
+## 📄 Licence
+Ce projet est sous licence MIT. Voir `LICENSE`.
