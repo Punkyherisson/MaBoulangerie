@@ -9,14 +9,17 @@ class Boulangerie:
         self.jour = 1
         self.actions_restantes = 5
         self.inventaire = {
-            'farine': 100,
-            'levure': 50,
-            'sel': 30,
-            'eau': 100
+            'farine': 50,  # kg
+            'levure': 10,  # kg
+            'sel': 5,      # kg
+            'eau': 50      # kg (litres)
         }
-        self.produits = {
-            'pain_frais': 0,
-            'pain_sec': 0
+        # Système de stockage par âge de pain (jour 0 = frais, jour 1-2 = vendable, jour 3+ = dur/jeté)
+        self.pains_par_age = {
+            0: 0,  # Pain frais (jour de fabrication)
+            1: 0,  # Pain 1 jour
+            2: 0,  # Pain 2 jours
+            3: 0   # Pain dur (3 jours ou plus - à jeter)
         }
         self.evenement_jour = None
         self.four_en_panne = False
@@ -37,14 +40,15 @@ class Boulangerie:
             self.inventaire['sel'] -= 1
             self.inventaire['eau'] -= 5
             
-            self.produits['pain_frais'] += 2
-            print("🥖 2 Pains fabriqués avec succès!")
+            self.pains_par_age[0] += 30
+            print("🥖 30 Pains frais fabriqués avec succès!")
         else:
             print("❌ Pas assez d'ingrédients!")
 
     def vendre(self):
-        if self.produits['pain_sec'] == 0 and self.produits['pain_frais'] == 0:
-            print("❌ Plus de pain en stock!")
+        total_pains_vendables = self.pains_par_age[0] + self.pains_par_age[1] + self.pains_par_age[2]
+        if total_pains_vendables == 0:
+            print("❌ Plus de pain vendable en stock!")
             return
         
         # Multiplicateur de prix selon l'événement
@@ -60,32 +64,38 @@ class Boulangerie:
             bonus_prix = -1
         elif self.evenement_jour == "greve_boulangers":
             vente_reduite = True
-            
-        # Vendre d'abord tous les pains secs
-        pains_secs_vendus = 0
-        while self.produits['pain_sec'] > 0:
-            if vente_reduite and pains_secs_vendus >= self.produits['pain_sec'] // 2 + 1:
-                break
-            prix = max(1, int(1 * multiplicateur_prix) + bonus_prix)
-            self.argent += prix
-            self.produits['pain_sec'] -= 1
-            pains_secs_vendus += 1
-            print(f"💰 Pain sec vendu pour {prix}€!")
-            
-        # Puis vendre tous les pains frais
-        pains_frais_vendus = 0
-        pains_frais_total = self.produits['pain_frais']
-        while self.produits['pain_frais'] > 0:
-            if vente_reduite and (pains_secs_vendus + pains_frais_vendus) >= (pains_frais_total + pains_secs_vendus) // 2:
-                break
-            prix_base = random.randint(3, 5)
+        
+        pains_vendus_total = 0
+        limite_vente = total_pains_vendables // 2 if vente_reduite else total_pains_vendables
+        
+        # Vendre d'abord les pains les plus vieux (jour 2)
+        while self.pains_par_age[2] > 0 and pains_vendus_total < limite_vente:
+            prix_base = 2  # Prix réduit pour pain de 2 jours
             prix = max(1, int(prix_base * multiplicateur_prix) + bonus_prix)
             self.argent += prix
-            self.produits['pain_frais'] -= 1
-            pains_frais_vendus += 1
+            self.pains_par_age[2] -= 1
+            pains_vendus_total += 1
+            print(f"💰 Pain de 2 jours vendu pour {prix}€!")
+        
+        # Vendre ensuite les pains de 1 jour
+        while self.pains_par_age[1] > 0 and pains_vendus_total < limite_vente:
+            prix_base = random.randint(3, 4)  # Prix moyen pour pain de 1 jour
+            prix = max(1, int(prix_base * multiplicateur_prix) + bonus_prix)
+            self.argent += prix
+            self.pains_par_age[1] -= 1
+            pains_vendus_total += 1
+            print(f"💰 Pain de 1 jour vendu pour {prix}€!")
+            
+        # Vendre enfin les pains frais (meilleur prix)
+        while self.pains_par_age[0] > 0 and pains_vendus_total < limite_vente:
+            prix_base = random.randint(4, 6)  # Meilleur prix pour pain frais
+            prix = max(1, int(prix_base * multiplicateur_prix) + bonus_prix)
+            self.argent += prix
+            self.pains_par_age[0] -= 1
+            pains_vendus_total += 1
             print(f"💰 Pain frais vendu pour {prix}€!")
         
-        if vente_reduite and (self.produits['pain_sec'] > 0 or self.produits['pain_frais'] > 0):
+        if vente_reduite and (self.pains_par_age[0] > 0 or self.pains_par_age[1] > 0 or self.pains_par_age[2] > 0):
             print("⚠️ Les clients n'achètent que la moitié des pains à cause de la grève!")
             
     def acheter_ingredients(self):
@@ -95,10 +105,10 @@ class Boulangerie:
             print("🎉 Promotion active! -50% sur les ingrédients!")
             
         if self.argent >= cout:
-            self.inventaire['farine'] += 50
-            self.inventaire['levure'] += 20
-            self.inventaire['sel'] += 10
-            self.inventaire['eau'] += 40
+            self.inventaire['farine'] += 25  # kg
+            self.inventaire['levure'] += 5   # kg
+            self.inventaire['sel'] += 3      # kg
+            self.inventaire['eau'] += 20     # kg (litres)
             self.argent -= cout
             print(f"📦 Ingrédients achetés pour {cout}€")
         else:
@@ -134,8 +144,10 @@ class Boulangerie:
         elif self.evenement_jour == "attaque_pigeons":
             print("🐦 ATTAQUE DE PIGEONS!")
             print("Les pigeons ont pillé tous vos stocks de pain!")
-            self.produits['pain_frais'] = 0
-            self.produits['pain_sec'] = 0
+            self.pains_par_age[0] = 0
+            self.pains_par_age[1] = 0
+            self.pains_par_age[2] = 0
+            self.pains_par_age[3] = 0
             
         elif self.evenement_jour == "clients_riches":
             print("💎 CLIENTS RICHES!")
@@ -159,10 +171,10 @@ class Boulangerie:
         elif self.evenement_jour == "livraison_gratuite":
             print("🎁 LIVRAISON GRATUITE!")
             print("Un fournisseur vous offre des ingrédients!")
-            self.inventaire['farine'] += 50
-            self.inventaire['levure'] += 20
-            self.inventaire['sel'] += 10
-            self.inventaire['eau'] += 40
+            self.inventaire['farine'] += 25  # kg
+            self.inventaire['levure'] += 5   # kg
+            self.inventaire['sel'] += 3      # kg
+            self.inventaire['eau'] += 20     # kg (litres)
             
         elif self.evenement_jour == "fete_village":
             print("🎊 FÊTE DU VILLAGE!")
@@ -189,6 +201,21 @@ class Boulangerie:
         print("="*50 + "\n")
         time.sleep(2)
     
+    def vieillir_pains(self):
+        """Vieillit tous les pains d'un jour et jette les pains de 3+ jours"""
+        pains_jetes = self.pains_par_age[3]
+        
+        # Déplacer les pains vers la catégorie d'âge suivante
+        self.pains_par_age[3] = self.pains_par_age[2]
+        self.pains_par_age[2] = self.pains_par_age[1]
+        self.pains_par_age[1] = self.pains_par_age[0]
+        self.pains_par_age[0] = 0
+        
+        # Jeter les pains trop vieux
+        if pains_jetes > 0:
+            print(f"🗑️ {pains_jetes} pain(s) dur(s) jeté(s) (3+ jours)")
+        self.pains_par_age[3] = 0
+    
     def afficher_status(self):
         print(f"\n=== {self.nom} ===")
         print(f"📅 Jour: {self.jour}/7")
@@ -197,9 +224,12 @@ class Boulangerie:
         print("\n📝 Inventaire:")
         for item, qte in self.inventaire.items():
             print(f"- {item}: {qte}")
-        print("\n🥖 Produits:")
-        for prod, qte in self.produits.items():
-            print(f"- {prod}: {qte}")
+        print("\n🥖 Stock de pains:")
+        print(f"- Frais (0 jour): {self.pains_par_age[0]}")
+        print(f"- 1 jour: {self.pains_par_age[1]}")
+        print(f"- 2 jours: {self.pains_par_age[2]}")
+        if self.pains_par_age[3] > 0:
+            print(f"- Durs (à jeter): {self.pains_par_age[3]}")
         print("=======================\n")
 
 def main():
@@ -230,11 +260,15 @@ def main():
             print(f"📅 Jour: {boulangerie.jour}/7")
             print(f"🎯 Actions restantes: {boulangerie.actions_restantes}")
             print(f"💶 Argent: {boulangerie.argent}€")
-            print(f"🥖 Pains frais: {boulangerie.produits['pain_frais']}")
-            print(f"🥖 Pains secs: {boulangerie.produits['pain_sec']}")
+            print("🥖 Stock de pains:")
+            print(f"  - Frais (0 jour): {boulangerie.pains_par_age[0]}")
+            print(f"  - 1 jour: {boulangerie.pains_par_age[1]}")
+            print(f"  - 2 jours: {boulangerie.pains_par_age[2]}")
+            if boulangerie.pains_par_age[3] > 0:
+                print(f"  - Durs (à jeter): {boulangerie.pains_par_age[3]}")
             print("📦 Ingrédients:")
             for item, qte in boulangerie.inventaire.items():
-                print(f"- {item}: {qte}")
+                print(f"  - {item}: {qte}")
             print("====================")
             
             print("\nActions disponibles:")
@@ -264,9 +298,9 @@ def main():
             
             time.sleep(1)
         
-        # Fin de journée : les pains frais deviennent secs
-        boulangerie.produits['pain_sec'] = boulangerie.produits['pain_frais']
-        boulangerie.produits['pain_frais'] = 0
+        # Fin de journée : vieillir les pains
+        print("\n🌙 Fin de la journée...")
+        boulangerie.vieillir_pains()
         boulangerie.jour += 1
         boulangerie.actions_restantes = 5
         if boulangerie.jour <= 7:

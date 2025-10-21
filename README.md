@@ -17,28 +17,39 @@ Objectif : Maximiser votre argent à la fin des 7 jours
 Actions disponibles
 Fabriquer du pain 🥖
 
-Coût : 10 farine, 2 levure, 1 sel, 5 eau
-Production : 2 pains frais
+Coût : 10 kg farine, 2 kg levure, 1 kg sel, 5 L eau
+Production : 30 pains de 500g (≈15 kg de pain cuit)
+Taux d'hydratation : 50%
 Vendre 💰
 
-Pain frais : 3-5€ (prix aléatoire)
-Pain sec : 1€
+Pain frais (0 jour) : 4-6€
+Pain de 1 jour : 3-4€
+Pain de 2 jours : 2€
+⚠️ Les pains de 3+ jours sont jetés automatiquement
 Acheter des ingrédients 📦
 
 Coût : 20€ (10€ pendant la promotion)
-Vous recevez : 50 farine, 20 levure, 10 sel, 40 eau
+Vous recevez : 25 kg farine, 5 kg levure, 3 kg sel, 20 L eau
 Voir le statut 📊
 
 Affiche vos ressources, produits et argent
 Terminer la journée 🌙
 
-Les pains frais deviennent des pains secs
+Tous les pains vieillissent d'un jour
+Les pains de 3+ jours sont automatiquement jetés
+⏰ Système de conservation
+Jour 0 (pain frais) : Prix maximum (4-6€)
+Jour 1 : Prix moyen (3-4€)
+Jour 2 : Prix réduit (2€)
+Jour 3+ : Pain dur, jeté automatiquement 🗑️
+💡 Astuce : Gérez bien votre production pour éviter le gaspillage !
+
 Ressources de départ
 💶 Argent : 1000€
-🌾 Farine : 100
-🧪 Levure : 50
-🧂 Sel : 30
-💧 Eau : 100
+🌾 Farine : 50 kg
+🧪 Levure : 10 kg
+🧂 Sel : 5 kg
+💧 Eau : 50 L
 🎲 Événements aléatoires
 Chaque jour, un événement aléatoire peut se produire :
 
