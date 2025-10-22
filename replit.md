@@ -12,6 +12,7 @@ A French bakery management simulation game built in Python. Players manage a bak
 - **Duration**: 7 game days
 - **Daily Actions**: 5 actions per day
 - **Starting Resources**: 1000€, 50kg flour, 10kg yeast, 5kg salt, 50L water
+- **Daily Customer Limit**: 50-100 customers per day (random, resets daily)
 - **Bread Aging System**: 
   - Day 0 (fresh): Best price (4-6€)
   - Day 1: Medium price (3-4€)
@@ -22,6 +23,11 @@ A French bakery management simulation game built in Python. Players manage a bak
 The game includes various random events each day, both positive (rich customers, food critic, free delivery, village festival) and negative (pigeon attack, robbery, oven breakdown, strike, health inspector).
 
 ## Recent Changes
+- **2025-10-22**: Added daily customer limit system
+  - Customers per day now vary between 50-100 (random each day)
+  - Players can only sell up to the daily customer limit
+  - Status displays now show customer count (sold/max)
+  - Clear feedback when customer limit is reached
 - **2025-10-21**: Initial setup in Replit environment
   - Installed Python 3.11
   - Created project documentation

@@ -24,6 +24,8 @@ class Boulangerie:
         self.evenement_jour = None
         self.four_en_panne = False
         self.promotion_ingredients = False
+        self.clients_max_jour = random.randint(50, 100)
+        self.pains_vendus_aujourd_hui = 0
         
     def fabriquer_pain(self):
         if self.four_en_panne:
@@ -51,6 +53,12 @@ class Boulangerie:
             print("❌ Plus de pain vendable en stock!")
             return
         
+        # Vérifier s'il reste des clients aujourd'hui
+        clients_restants = self.clients_max_jour - self.pains_vendus_aujourd_hui
+        if clients_restants <= 0:
+            print(f"❌ Plus de clients aujourd'hui! (limite: {self.clients_max_jour} pains/jour)")
+            return
+        
         # Multiplicateur de prix selon l'événement
         multiplicateur_prix = 1.0
         bonus_prix = 0
@@ -66,7 +74,8 @@ class Boulangerie:
             vente_reduite = True
         
         pains_vendus_total = 0
-        limite_vente = total_pains_vendables // 2 if vente_reduite else total_pains_vendables
+        # Limiter par les clients restants
+        limite_vente = min(clients_restants, total_pains_vendables // 2 if vente_reduite else total_pains_vendables)
         
         # Vendre d'abord les pains les plus vieux (jour 2)
         while self.pains_par_age[2] > 0 and pains_vendus_total < limite_vente:
@@ -94,6 +103,10 @@ class Boulangerie:
             self.pains_par_age[0] -= 1
             pains_vendus_total += 1
             print(f"💰 Pain frais vendu pour {prix}€!")
+        
+        # Mettre à jour le compteur de pains vendus aujourd'hui
+        self.pains_vendus_aujourd_hui += pains_vendus_total
+        print(f"✅ {pains_vendus_total} pain(s) vendu(s)! Clients restants: {self.clients_max_jour - self.pains_vendus_aujourd_hui}/{self.clients_max_jour}")
         
         if vente_reduite and (self.pains_par_age[0] > 0 or self.pains_par_age[1] > 0 or self.pains_par_age[2] > 0):
             print("⚠️ Les clients n'achètent que la moitié des pains à cause de la grève!")
@@ -201,6 +214,12 @@ class Boulangerie:
         print("="*50 + "\n")
         time.sleep(2)
     
+    def nouveau_jour(self):
+        """Initialise un nouveau jour avec de nouveaux clients"""
+        self.clients_max_jour = random.randint(50, 100)
+        self.pains_vendus_aujourd_hui = 0
+        print(f"👥 Clients potentiels aujourd'hui: {self.clients_max_jour}")
+    
     def vieillir_pains(self):
         """Vieillit tous les pains d'un jour et jette les pains de 3+ jours"""
         pains_jetes = self.pains_par_age[3]
@@ -221,6 +240,7 @@ class Boulangerie:
         print(f"📅 Jour: {self.jour}/7")
         print(f"🎯 Actions restantes aujourd'hui: {self.actions_restantes}")
         print(f"💶 Argent: {self.argent}€")
+        print(f"👥 Clients: {self.pains_vendus_aujourd_hui}/{self.clients_max_jour}")
         print("\n📝 Inventaire:")
         for item, qte in self.inventaire.items():
             print(f"- {item}: {qte}")
@@ -250,9 +270,11 @@ def main():
     input("\nAppuyez sur Entrée pour commencer...")
     
     while boulangerie.jour <= 7:
-        # Déclencher un événement aléatoire au début de chaque jour
+        # Initialiser le nouveau jour avec de nouveaux clients
         if boulangerie.jour == 1:
             print(f"\n=== Jour {boulangerie.jour}/7 ===\n")
+        boulangerie.nouveau_jour()
+        # Déclencher un événement aléatoire au début de chaque jour
         boulangerie.declencher_evenement()
         
         while boulangerie.actions_restantes > 0:
@@ -260,6 +282,7 @@ def main():
             print(f"📅 Jour: {boulangerie.jour}/7")
             print(f"🎯 Actions restantes: {boulangerie.actions_restantes}")
             print(f"💶 Argent: {boulangerie.argent}€")
+            print(f"👥 Clients: {boulangerie.pains_vendus_aujourd_hui}/{boulangerie.clients_max_jour}")
             print("🥖 Stock de pains:")
             print(f"  - Frais (0 jour): {boulangerie.pains_par_age[0]}")
             print(f"  - 1 jour: {boulangerie.pains_par_age[1]}")
