@@ -23,6 +23,11 @@ A French bakery management simulation game built in Python. Players manage a bak
 The game includes various random events each day, both positive (rich customers, food critic, free delivery, village festival) and negative (pigeon attack, robbery, oven breakdown, strike, health inspector).
 
 ## Recent Changes
+- **2025-10-22**: Enhanced score tracking and display
+  - Scores now include date and time of completion
+  - Top 10 leaderboard displayed at end of each game
+  - Backward compatible with old score format
+  - All scores are preserved in scores.txt (append mode)
 - **2025-10-22**: Added daily customer limit system
   - Customers per day now vary between 50-100 (random each day)
   - Players can only sell up to the daily customer limit
