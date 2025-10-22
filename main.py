@@ -1,6 +1,8 @@
 
 import random
 import time
+from datetime import datetime
+import os
 
 class Boulangerie:
     def __init__(self, nom="Boulangerie Emma"):
@@ -333,9 +335,47 @@ def main():
     print(f"\n🎮 Fin du jeu! Vous terminez avec {boulangerie.argent}€")
     print(f"Score final: {score_final}€")
     
+    # Sauvegarder le score avec date et heure
+    date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M")
     with open('scores.txt', 'a') as f:
-        f.write(f"{boulangerie.nom}: {score_final}€\n")
-    print("Score sauvegardé dans scores.txt!")
+        f.write(f"{date_actuelle} | {boulangerie.nom}: {score_final}€\n")
+    print("✅ Score sauvegardé dans scores.txt!")
+    
+    # Afficher les meilleurs scores
+    print("\n🏆 === MEILLEURS SCORES ===")
+    if os.path.exists('scores.txt'):
+        with open('scores.txt', 'r') as f:
+            lignes = f.readlines()
+        
+        if lignes:
+            # Extraire et trier les scores
+            scores_tries = []
+            for ligne in lignes:
+                try:
+                    # Format: date | nom: score€
+                    parties = ligne.strip().split('|')
+                    if len(parties) >= 2:
+                        info = parties[1].strip()
+                        score_str = info.split(':')[1].strip().replace('€', '')
+                        score_val = int(score_str)
+                        scores_tries.append((ligne.strip(), score_val))
+                    else:
+                        # Ancien format sans date
+                        score_str = ligne.split(':')[1].strip().replace('€', '')
+                        score_val = int(score_str)
+                        scores_tries.append((ligne.strip(), score_val))
+                except:
+                    continue
+            
+            # Trier par score décroissant et afficher top 10
+            scores_tries.sort(key=lambda x: x[1], reverse=True)
+            for i, (ligne, _) in enumerate(scores_tries[:10], 1):
+                print(f"{i}. {ligne}")
+        else:
+            print("Aucun score enregistré pour le moment.")
+    else:
+        print("Aucun score enregistré pour le moment.")
+    print("===========================")
 
 if __name__ == "__main__":
     main()
