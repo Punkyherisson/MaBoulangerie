@@ -3,6 +3,7 @@ import random
 import time
 from datetime import datetime
 import os
+import math
 
 class Boulangerie:
     def __init__(self, nom="Boulangerie Emma"):
@@ -28,6 +29,7 @@ class Boulangerie:
         self.promotion_ingredients = False
         self.clients_max_jour = random.randint(50, 100)
         self.pains_vendus_aujourd_hui = 0
+        self.argent_banque = 0
         
     def fabriquer_pain(self):
         if self.four_en_panne:
@@ -128,6 +130,40 @@ class Boulangerie:
             print(f"📦 Ingrédients achetés pour {cout}€")
         else:
             print("❌ Pas assez d'argent!")
+    
+    def mettre_argent_banque(self):
+        if self.argent <= 0:
+            print("❌ Vous n'avez pas d'argent à déposer!")
+            return
+        
+        print(f"\n💶 Argent disponible: {self.argent}€")
+        montant_str = input("Combien voulez-vous déposer à la banque? (0 pour annuler): ")
+        
+        try:
+            montant = int(montant_str)
+            if montant <= 0:
+                print("❌ Opération annulée")
+                return
+            
+            if montant > self.argent:
+                print("❌ Vous n'avez pas assez d'argent!")
+                return
+            
+            # Calculer les frais (10%, arrondi au supérieur)
+            frais = math.ceil(montant * 0.1)
+            montant_depose = montant - frais
+            
+            self.argent -= montant
+            self.argent_banque += montant_depose
+            
+            print(f"🏦 Dépôt effectué!")
+            print(f"   Montant déposé: {montant}€")
+            print(f"   Frais bancaires (10%): {frais}€")
+            print(f"   Ajouté en banque: {montant_depose}€")
+            print(f"   💰 Argent liquide restant: {self.argent}€")
+            print(f"   🏦 Total en banque: {self.argent_banque}€")
+        except ValueError:
+            print("❌ Montant invalide!")
 
     def declencher_evenement(self):
         evenements = [
@@ -170,8 +206,15 @@ class Boulangerie:
             
         elif self.evenement_jour == "hold_up":
             print("🔫 HOLD UP!")
-            print("Des bandits ont volé tout votre argent!")
-            self.argent = 0
+            if self.argent > 0:
+                print(f"Des bandits ont volé tout votre argent liquide ({self.argent}€)!")
+                if self.argent_banque > 0:
+                    print(f"🏦 Heureusement, vos {self.argent_banque}€ en banque sont en sécurité!")
+                self.argent = 0
+            else:
+                print("Des bandits tentent de vous voler mais vous n'avez pas d'argent liquide!")
+                if self.argent_banque > 0:
+                    print(f"🏦 Vos {self.argent_banque}€ en banque sont en sécurité!")
             
         elif self.evenement_jour == "critique_culinaire":
             print("⭐ CRITIQUE CULINAIRE!")
@@ -241,7 +284,9 @@ class Boulangerie:
         print(f"\n=== {self.nom} ===")
         print(f"📅 Jour: {self.jour}/7")
         print(f"🎯 Actions restantes aujourd'hui: {self.actions_restantes}")
-        print(f"💶 Argent: {self.argent}€")
+        print(f"💶 Argent liquide: {self.argent}€")
+        print(f"🏦 Argent en banque: {self.argent_banque}€")
+        print(f"💰 Total: {self.argent + self.argent_banque}€")
         print(f"👥 Clients: {self.pains_vendus_aujourd_hui}/{self.clients_max_jour}")
         print("\n📝 Inventaire:")
         for item, qte in self.inventaire.items():
@@ -283,7 +328,8 @@ def main():
             print("\n=== STATUT ACTUEL ===")
             print(f"📅 Jour: {boulangerie.jour}/7")
             print(f"🎯 Actions restantes: {boulangerie.actions_restantes}")
-            print(f"💶 Argent: {boulangerie.argent}€")
+            print(f"💶 Argent liquide: {boulangerie.argent}€")
+            print(f"🏦 En banque: {boulangerie.argent_banque}€")
             print(f"👥 Clients: {boulangerie.pains_vendus_aujourd_hui}/{boulangerie.clients_max_jour}")
             print("🥖 Stock de pains:")
             print(f"  - Frais (0 jour): {boulangerie.pains_par_age[0]}")
@@ -300,10 +346,11 @@ def main():
             print("1. Fabriquer du pain")
             print("2. Vendre")
             print("3. Acheter des ingrédients")
-            print("4. Voir le status")
-            print("5. Terminer la journée")
+            print("4. Mettre l'argent en banque (frais 10%)")
+            print("5. Voir le status")
+            print("6. Terminer la journée")
             
-            choix = input("\nQue voulez-vous faire? (1-5): ")
+            choix = input("\nQue voulez-vous faire? (1-6): ")
             
             if choix == "1":
                 boulangerie.fabriquer_pain()
@@ -315,8 +362,11 @@ def main():
                 boulangerie.acheter_ingredients()
                 boulangerie.actions_restantes -= 1
             elif choix == "4":
-                boulangerie.afficher_status()
+                boulangerie.mettre_argent_banque()
+                boulangerie.actions_restantes -= 1
             elif choix == "5":
+                boulangerie.afficher_status()
+            elif choix == "6":
                 break
             else:
                 print("Option invalide!")
@@ -331,9 +381,13 @@ def main():
         if boulangerie.jour <= 7:
             print(f"\n=== Début du jour {boulangerie.jour}/7 ===")
     
-    score_final = boulangerie.argent - 1000
-    print(f"\n🎮 Fin du jeu! Vous terminez avec {boulangerie.argent}€")
-    print(f"Score final: {score_final}€")
+    argent_total = boulangerie.argent + boulangerie.argent_banque
+    score_final = argent_total - 1000
+    print(f"\n🎮 Fin du jeu!")
+    print(f"💶 Argent liquide: {boulangerie.argent}€")
+    print(f"🏦 Argent en banque: {boulangerie.argent_banque}€")
+    print(f"💰 Total: {argent_total}€")
+    print(f"📊 Score final: {score_final}€")
     
     # Sauvegarder le score avec date et heure
     date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M")
