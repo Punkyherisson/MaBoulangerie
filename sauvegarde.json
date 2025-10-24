@@ -1,0 +1,25 @@
+{
+  "nom": "Boulangerie Manu",
+  "argent": 637,
+  "argent_banque": 1080,
+  "jour": 5,
+  "cycle": 1,
+  "actions_restantes": 3,
+  "inventaire": {
+    "farine": 65,
+    "levure": 13,
+    "sel": 9,
+    "eau": 95
+  },
+  "pains_par_age": {
+    "0": 0,
+    "1": 101,
+    "2": 0,
+    "3": 0
+  },
+  "clients_max_jour": 72,
+  "pains_vendus_aujourd_hui": 0,
+  "evenement_jour": "inspecteur_sanitaire",
+  "four_en_panne": false,
+  "promotion_ingredients": false
+}
