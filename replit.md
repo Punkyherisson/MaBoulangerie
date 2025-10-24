@@ -23,6 +23,13 @@ A French bakery management simulation game built in Python. Players manage a bak
 The game includes various random events each day, both positive (rich customers, food critic, free delivery, village festival) and negative (pigeon attack, robbery, oven breakdown, strike, health inspector).
 
 ## Recent Changes
+- **2025-10-23**: Système de sauvegarde et cycles multiples
+  - Nouvelle option "Sauvegarder et quitter" pour sauvegarder et reprendre plus tard
+  - Chargement automatique de partie sauvegardée au démarrage
+  - Après 7 jours, possibilité de continuer pour un nouveau cycle
+  - Les ressources et l'argent sont conservés entre les cycles
+  - Les scores incluent le numéro de cycle
+  - Sauvegarde complète de l'état du jeu (incluant événements en cours)
 - **2025-10-23**: Added banking system
   - New action: deposit money in bank (10% fee)
   - Bank money is protected from robbery (hold-up events)

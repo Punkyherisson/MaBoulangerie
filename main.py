@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 import os
 import math
+import json
 
 class Boulangerie:
     def __init__(self, nom="Boulangerie Emma"):
@@ -30,6 +31,53 @@ class Boulangerie:
         self.clients_max_jour = random.randint(50, 100)
         self.pains_vendus_aujourd_hui = 0
         self.argent_banque = 0
+        self.cycle = 1
+        
+    def sauvegarder(self, fichier='sauvegarde.json'):
+        """Sauvegarde l'état actuel de la boulangerie"""
+        etat = {
+            'nom': self.nom,
+            'argent': self.argent,
+            'argent_banque': self.argent_banque,
+            'jour': self.jour,
+            'cycle': self.cycle,
+            'actions_restantes': self.actions_restantes,
+            'inventaire': self.inventaire,
+            'pains_par_age': self.pains_par_age,
+            'clients_max_jour': self.clients_max_jour,
+            'pains_vendus_aujourd_hui': self.pains_vendus_aujourd_hui,
+            'evenement_jour': self.evenement_jour,
+            'four_en_panne': self.four_en_panne,
+            'promotion_ingredients': self.promotion_ingredients
+        }
+        with open(fichier, 'w') as f:
+            json.dump(etat, f, indent=2)
+        print(f"✅ Partie sauvegardée dans {fichier}!")
+    
+    @classmethod
+    def charger(cls, fichier='sauvegarde.json'):
+        """Charge une partie sauvegardée"""
+        if not os.path.exists(fichier):
+            return None
+        
+        with open(fichier, 'r') as f:
+            etat = json.load(f)
+        
+        boulangerie = cls(etat['nom'])
+        boulangerie.argent = etat['argent']
+        boulangerie.argent_banque = etat['argent_banque']
+        boulangerie.jour = etat['jour']
+        boulangerie.cycle = etat.get('cycle', 1)
+        boulangerie.actions_restantes = etat['actions_restantes']
+        boulangerie.inventaire = etat['inventaire']
+        boulangerie.pains_par_age = {int(k): v for k, v in etat['pains_par_age'].items()}
+        boulangerie.clients_max_jour = etat['clients_max_jour']
+        boulangerie.pains_vendus_aujourd_hui = etat['pains_vendus_aujourd_hui']
+        boulangerie.evenement_jour = etat.get('evenement_jour')
+        boulangerie.four_en_panne = etat.get('four_en_panne', False)
+        boulangerie.promotion_ingredients = etat.get('promotion_ingredients', False)
+        
+        return boulangerie
         
     def fabriquer_pain(self):
         if self.four_en_panne:
@@ -282,6 +330,7 @@ class Boulangerie:
     
     def afficher_status(self):
         print(f"\n=== {self.nom} ===")
+        print(f"🔄 Cycle: {self.cycle}")
         print(f"📅 Jour: {self.jour}/7")
         print(f"🎯 Actions restantes aujourd'hui: {self.actions_restantes}")
         print(f"💶 Argent liquide: {self.argent}€")
@@ -301,99 +350,159 @@ class Boulangerie:
 
 def main():
     print("🥖 Bienvenue dans votre Boulangerie! 🥖")
-    nom = input("Entrez le nom de votre boulangerie (ou appuyez sur Entrée pour garder 'Boulangerie Emma'): ")
-    boulangerie = Boulangerie(nom) if nom else Boulangerie()
     
-    print("\n📜 RÈGLES DU JEU:")
-    print("- Vous avez 7 jours pour faire prospérer votre boulangerie")
-    print("- Chaque jour, vous pouvez faire 5 actions")
-    print("- Fabriquez du pain en utilisant vos ingrédients")
-    print("- Les pains non vendus deviennent des pains secs le jour suivant")
-    print("- Les pains secs se vendent 1€ l'unité")
-    print("- Vendez votre pain pour gagner de l'argent")
-    print("- Achetez des ingrédients quand vous en manquez")
-    print("- Objectif: Avoir le plus d'argent possible à la fin des 7 jours!")
+    # Vérifier s'il y a une sauvegarde
+    boulangerie = None
+    if os.path.exists('sauvegarde.json'):
+        print("\n💾 Une sauvegarde a été trouvée!")
+        choix = input("Voulez-vous (1) Charger la partie ou (2) Nouvelle partie? ")
+        if choix == "1":
+            boulangerie = Boulangerie.charger()
+            if boulangerie:
+                print(f"✅ Partie chargée: {boulangerie.nom}")
+                print(f"📅 Cycle {boulangerie.cycle}, Jour {boulangerie.jour}/7")
+                print(f"💰 {boulangerie.argent + boulangerie.argent_banque}€")
+                input("\nAppuyez sur Entrée pour continuer...")
     
-    input("\nAppuyez sur Entrée pour commencer...")
-    
-    while boulangerie.jour <= 7:
-        # Initialiser le nouveau jour avec de nouveaux clients
-        if boulangerie.jour == 1:
-            print(f"\n=== Jour {boulangerie.jour}/7 ===\n")
-        boulangerie.nouveau_jour()
-        # Déclencher un événement aléatoire au début de chaque jour
-        boulangerie.declencher_evenement()
+    if not boulangerie:
+        nom = input("\nEntrez le nom de votre boulangerie (ou appuyez sur Entrée pour garder 'Boulangerie Emma'): ")
+        boulangerie = Boulangerie(nom) if nom else Boulangerie()
         
-        while boulangerie.actions_restantes > 0:
-            print("\n=== STATUT ACTUEL ===")
-            print(f"📅 Jour: {boulangerie.jour}/7")
-            print(f"🎯 Actions restantes: {boulangerie.actions_restantes}")
-            print(f"💶 Argent liquide: {boulangerie.argent}€")
-            print(f"🏦 En banque: {boulangerie.argent_banque}€")
-            print(f"👥 Clients: {boulangerie.pains_vendus_aujourd_hui}/{boulangerie.clients_max_jour}")
-            print("🥖 Stock de pains:")
-            print(f"  - Frais (0 jour): {boulangerie.pains_par_age[0]}")
-            print(f"  - 1 jour: {boulangerie.pains_par_age[1]}")
-            print(f"  - 2 jours: {boulangerie.pains_par_age[2]}")
-            if boulangerie.pains_par_age[3] > 0:
-                print(f"  - Durs (à jeter): {boulangerie.pains_par_age[3]}")
-            print("📦 Ingrédients:")
-            for item, qte in boulangerie.inventaire.items():
-                print(f"  - {item}: {qte}")
-            print("====================")
-            
-            print("\nActions disponibles:")
-            print("1. Fabriquer du pain")
-            print("2. Vendre")
-            print("3. Acheter des ingrédients")
-            print("4. Mettre l'argent en banque (frais 10%)")
-            print("5. Voir le status")
-            print("6. Terminer la journée")
-            
-            choix = input("\nQue voulez-vous faire? (1-6): ")
-            
-            if choix == "1":
-                boulangerie.fabriquer_pain()
-                boulangerie.actions_restantes -= 1
-            elif choix == "2":
-                boulangerie.vendre()
-                boulangerie.actions_restantes -= 1
-            elif choix == "3":
-                boulangerie.acheter_ingredients()
-                boulangerie.actions_restantes -= 1
-            elif choix == "4":
-                boulangerie.mettre_argent_banque()
-                boulangerie.actions_restantes -= 1
-            elif choix == "5":
-                boulangerie.afficher_status()
-            elif choix == "6":
-                break
-            else:
-                print("Option invalide!")
-            
-            time.sleep(1)
+        print("\n📜 RÈGLES DU JEU:")
+        print("- Vous avez 7 jours pour faire prospérer votre boulangerie")
+        print("- Chaque jour, vous pouvez faire 5 actions")
+        print("- Fabriquez du pain en utilisant vos ingrédients")
+        print("- Vendez votre pain pour gagner de l'argent")
+        print("- Achetez des ingrédients quand vous en manquez")
+        print("- Mettez votre argent en banque pour le protéger des vols")
+        print("- Objectif: Avoir le plus d'argent possible!")
         
-        # Fin de journée : vieillir les pains
-        print("\n🌙 Fin de la journée...")
-        boulangerie.vieillir_pains()
-        boulangerie.jour += 1
-        boulangerie.actions_restantes = 5
-        if boulangerie.jour <= 7:
-            print(f"\n=== Début du jour {boulangerie.jour}/7 ===")
+        input("\nAppuyez sur Entrée pour commencer...")
     
-    argent_total = boulangerie.argent + boulangerie.argent_banque
-    score_final = argent_total - 1000
-    print(f"\n🎮 Fin du jeu!")
-    print(f"💶 Argent liquide: {boulangerie.argent}€")
-    print(f"🏦 Argent en banque: {boulangerie.argent_banque}€")
-    print(f"💰 Total: {argent_total}€")
-    print(f"📊 Score final: {score_final}€")
+    # Boucle principale des cycles
+    continuer_jeu = True
+    score_final = 0
+    argent_total = 0
+    while continuer_jeu:
+        # Boucle des 7 jours
+        while boulangerie.jour <= 7:
+            # Initialiser le nouveau jour seulement si c'est vraiment un nouveau jour
+            # (pas si on vient de charger une sauvegarde en cours de journée)
+            if boulangerie.actions_restantes == 5 and boulangerie.evenement_jour is None:
+                if boulangerie.jour == 1:
+                    print(f"\n=== Jour {boulangerie.jour}/7 ===\n")
+                boulangerie.nouveau_jour()
+                # Déclencher un événement aléatoire au début de chaque jour
+                boulangerie.declencher_evenement()
+            
+            while boulangerie.actions_restantes > 0:
+                print("\n=== STATUT ACTUEL ===")
+                print(f"🔄 Cycle {boulangerie.cycle} - 📅 Jour: {boulangerie.jour}/7")
+                print(f"🎯 Actions restantes: {boulangerie.actions_restantes}")
+                print(f"💶 Argent liquide: {boulangerie.argent}€")
+                print(f"🏦 En banque: {boulangerie.argent_banque}€")
+                print(f"👥 Clients: {boulangerie.pains_vendus_aujourd_hui}/{boulangerie.clients_max_jour}")
+                print("🥖 Stock de pains:")
+                print(f"  - Frais (0 jour): {boulangerie.pains_par_age[0]}")
+                print(f"  - 1 jour: {boulangerie.pains_par_age[1]}")
+                print(f"  - 2 jours: {boulangerie.pains_par_age[2]}")
+                if boulangerie.pains_par_age[3] > 0:
+                    print(f"  - Durs (à jeter): {boulangerie.pains_par_age[3]}")
+                print("📦 Ingrédients:")
+                for item, qte in boulangerie.inventaire.items():
+                    print(f"  - {item}: {qte}")
+                print("====================")
+                
+                print("\nActions disponibles:")
+                print("1. Fabriquer du pain")
+                print("2. Vendre")
+                print("3. Acheter des ingrédients")
+                print("4. Mettre l'argent en banque (frais 10%)")
+                print("5. Voir le status")
+                print("6. Sauvegarder et quitter")
+                print("7. Terminer la journée")
+                
+                choix = input("\nQue voulez-vous faire? (1-7): ")
+                
+                if choix == "1":
+                    boulangerie.fabriquer_pain()
+                    boulangerie.actions_restantes -= 1
+                elif choix == "2":
+                    boulangerie.vendre()
+                    boulangerie.actions_restantes -= 1
+                elif choix == "3":
+                    boulangerie.acheter_ingredients()
+                    boulangerie.actions_restantes -= 1
+                elif choix == "4":
+                    boulangerie.mettre_argent_banque()
+                    boulangerie.actions_restantes -= 1
+                elif choix == "5":
+                    boulangerie.afficher_status()
+                elif choix == "6":
+                    boulangerie.sauvegarder()
+                    print("👋 À bientôt!")
+                    return
+                elif choix == "7":
+                    break
+                else:
+                    print("Option invalide!")
+                
+                time.sleep(1)
+            
+            # Fin de journée : vieillir les pains et réinitialiser l'état du jour
+            print("\n🌙 Fin de la journée...")
+            boulangerie.vieillir_pains()
+            boulangerie.jour += 1
+            boulangerie.actions_restantes = 5
+            # Réinitialiser les événements pour le prochain jour
+            boulangerie.evenement_jour = None
+            boulangerie.four_en_panne = False
+            boulangerie.promotion_ingredients = False
+            boulangerie.pains_vendus_aujourd_hui = 0
+            if boulangerie.jour <= 7:
+                print(f"\n=== Début du jour {boulangerie.jour}/7 ===")
+        
+        # Fin du cycle de 7 jours
+        argent_total = boulangerie.argent + boulangerie.argent_banque
+        score_final = argent_total - 1000
+        print(f"\n🎮 Fin du cycle {boulangerie.cycle}!")
+        print(f"💶 Argent liquide: {boulangerie.argent}€")
+        print(f"🏦 Argent en banque: {boulangerie.argent_banque}€")
+        print(f"💰 Total: {argent_total}€")
+        print(f"📊 Score: {score_final}€")
+        
+        # Proposer de continuer
+        print("\n🔄 Voulez-vous continuer pour un nouveau cycle de 7 jours?")
+        continuer = input("(1) Oui, continuer  (2) Non, terminer la partie: ")
+        
+        if continuer == "1":
+            print("\n🎉 Nouveau cycle commence!")
+            print("Vos ressources et votre argent sont conservés.")
+            boulangerie.cycle += 1
+            boulangerie.jour = 1
+            boulangerie.actions_restantes = 5
+            boulangerie.pains_vendus_aujourd_hui = 0
+            boulangerie.clients_max_jour = random.randint(50, 100)
+            # Réinitialiser les événements
+            boulangerie.evenement_jour = None
+            boulangerie.four_en_panne = False
+            boulangerie.promotion_ingredients = False
+            input("\nAppuyez sur Entrée pour commencer le nouveau cycle...")
+            # Continue la boucle while continuer_jeu
+        else:
+            continuer_jeu = False
     
-    # Sauvegarder le score avec date et heure
-    date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M")
-    with open('scores.txt', 'a') as f:
-        f.write(f"{date_actuelle} | {boulangerie.nom}: {score_final}€\n")
-    print("✅ Score sauvegardé dans scores.txt!")
+    # Fin du jeu : sauvegarder le score
+    if not continuer_jeu:
+        date_actuelle = datetime.now().strftime("%Y-%m-%d %H:%M")
+        with open('scores.txt', 'a') as f:
+            f.write(f"{date_actuelle} | {boulangerie.nom} (Cycle {boulangerie.cycle}): {score_final}€\n")
+        print("✅ Score sauvegardé dans scores.txt!")
+        
+        # Supprimer la sauvegarde
+        if os.path.exists('sauvegarde.json'):
+            os.remove('sauvegarde.json')
+            print("🗑️ Sauvegarde supprimée.")
     
     # Afficher les meilleurs scores
     print("\n🏆 === MEILLEURS SCORES ===")
